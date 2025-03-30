@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from langchain_openai import OpenAI
+from langchain_openai import OpenAI as LangchainOpenAI
 from langchain.prompts import PromptTemplate
 import os
 import time
@@ -32,10 +32,26 @@ class LateralThinkingEnhanced:
         os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
         
         # Initialize different language models with timeouts
-        self.analyst_llm = OpenAI(temperature=ANALYST_TEMPERATURE, request_timeout=API_REQUEST_TIMEOUT)
-        self.challenger_llm = OpenAI(temperature=CHALLENGER_TEMPERATURE, request_timeout=API_REQUEST_TIMEOUT)
-        self.evaluator_llm = OpenAI(temperature=EVALUATOR_TEMPERATURE, request_timeout=API_REQUEST_TIMEOUT)
-        self.domain_llm = OpenAI(temperature=DOMAIN_TEMPERATURE, request_timeout=API_REQUEST_TIMEOUT)
+        self.analyst_llm = LangchainOpenAI(
+            temperature=ANALYST_TEMPERATURE,
+            request_timeout=API_REQUEST_TIMEOUT,
+            openai_api_key=os.environ.get("OPENAI_API_KEY")
+        )
+        self.challenger_llm = LangchainOpenAI(
+            temperature=CHALLENGER_TEMPERATURE,
+            request_timeout=API_REQUEST_TIMEOUT,
+            openai_api_key=os.environ.get("OPENAI_API_KEY")
+        )
+        self.evaluator_llm = LangchainOpenAI(
+            temperature=EVALUATOR_TEMPERATURE,
+            request_timeout=API_REQUEST_TIMEOUT,
+            openai_api_key=os.environ.get("OPENAI_API_KEY")
+        )
+        self.domain_llm = LangchainOpenAI(
+            temperature=DOMAIN_TEMPERATURE,
+            request_timeout=API_REQUEST_TIMEOUT,
+            openai_api_key=os.environ.get("OPENAI_API_KEY")
+        )
     
     def generate_random_domains(self, num_domains: int = NUM_DOMAINS) -> List[str]:
         """Generate random knowledge domains for cross-pollination of ideas"""
