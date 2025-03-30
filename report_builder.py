@@ -20,10 +20,15 @@ def tree_to_html(tree, level=0):
     return html_content
 
 def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
-    """Generate an HTML report styled with external CSS"""
+    """Generate an HTML report with embedded CSS"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # Create HTML content with a link to the external stylesheet
+    # Read the CSS file and embed it
+    css_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "style.css")
+    with open(css_path, 'r') as css_file:
+        css_content = css_file.read()
+    
+    # Create HTML content with embedded CSS
     html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -34,7 +39,9 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=Lexend:wght@300;400&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="style.css">
+        <style>
+        {css_content}
+        </style>
     </head>
     <body>
         <div class="top-bar"></div>
