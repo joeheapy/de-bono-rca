@@ -11,30 +11,30 @@ from datetime import datetime
 import html
 
 # Problem statement
-PROBLEM_STATEMENT = "The United Kingdom faces a significant housing crisis characterized by persistent shortages of affordable homes across the country. This crisis stems from a property market structure that systematically disincentivizes the development of affordable housing through multiple interconnected mechanisms:"
+PROBLEM_STATEMENT = "Low-income families in the United Kingdom face significant challenges accessing and affording fresh, nutritious foods. This problem creates and perpetuates health disparities, reduces quality of life, and imposes substantial long-term costs on individuals, communities, and healthcare systems:"
 
 # API and processing parameters
-NUM_DOMAINS = 2                  # Number of knowledge domains to generate for inspiration
+NUM_DOMAINS = 1                  # Number of knowledge domains to generate for inspiration
 NUM_INITIAL_CAUSES = 1           # Number of initial causes to identify
-ROOT_CAUSE_DEPTH = 2             # Number of times to ask 'why'
-MAX_LEAF_CAUSES = 5              # Max number of leaf causes to generate solutions for
-SOLUTIONS_PER_DOMAIN = 2         # Generate multiple solutions per domain
-API_REQUEST_TIMEOUT = 30         # Kept the same
-API_CALL_DELAY = 1               # Kept the same
+ROOT_CAUSE_DEPTH = 1             # Number of times to ask 'why'
+MAX_LEAF_CAUSES = 1              # Max number of leaf causes to generate solutions for
+SOLUTIONS_PER_DOMAIN = 1         # Generate multiple solutions per domain
+API_REQUEST_TIMEOUT = 30         # Timeout for API calls in seconds
+API_CALL_DELAY = 1               # Delay between API calls in seconds
 
 # LLM temperature settings (higher = more creative, lower = more focused)
 ANALYST_TEMPERATURE = 0.3        # For analytical tasks (identifying causes)
 CHALLENGER_TEMPERATURE = 0.8     # For creative solutions
-EVALUATOR_TEMPERATURE = 0.2      # For evaluation (unused in simplified version)
+EVALUATOR_TEMPERATURE = 0.2      # For evaluation
 DOMAIN_TEMPERATURE = 0.9         # For generating diverse domains
 
 # HTML styling variables
 HTML_STYLE = {
-    "primary_color": "#5829a7",  # JRF purple
-    "secondary_color": "#9175c5", # JRF light purple
-    "accent_color": "#0071bc",   # JRF blue
+    "primary_color": "#15263C",  # Dark blue
+    "secondary_color": "#A0D7E4", # Light blue
+    "accent_color": "#0071bc",   # Blue accent
     "text_color": "#2e3132",     # Dark gray for text
-    "light_gray": "#f7f7f7",     # Background for content sections
+    "light_gray": "#ffffff",     # White for content sections
     "mid_gray": "#e6e6e6",       # Borders
     "dark_gray": "#6d6e71"       # Secondary text
 }
@@ -78,7 +78,7 @@ class LateralThinkingEnhanced:
             return domains[:num_domains]
         except Exception as e:
             print(f"Error generating domains: {e}")
-            return ["Biology", "Magical Realism", "Game Theory", "Neuroscience", "mycology"]  # Fallback domains
+            return ["Biology", "Magical Realism", "Game Theory", "Neuroscience", "Mycology"]  # Fallback domains
     
     def identify_initial_causes(self, problem: str, num_causes: int = NUM_INITIAL_CAUSES) -> List[str]:
         """Identify the initial set of potential root causes for the problem"""
@@ -86,10 +86,11 @@ class LateralThinkingEnhanced:
         cause_prompt = PromptTemplate(
             input_variables=["problem", "num_causes"],
             template="""For the problem: '{problem}'
-            
-            Identify {num_causes} potential root causes that might be contributing to the problem.
-            Format each root cause as a clear, concise statement.
-            """
+
+Identify EXACTLY {num_causes} potential root cause(s) that might be contributing to the problem.
+Do NOT provide more than {num_causes} cause(s).
+Format the cause as a clear, concise statement without numbering.
+"""
         )
         
         # Use pipe operator
@@ -97,10 +98,13 @@ class LateralThinkingEnhanced:
         try:
             causes_result = cause_chain.invoke({"problem": problem, "num_causes": num_causes})
             causes = [cause.strip() for cause in causes_result.strip().split('\n') if cause.strip()]
+            # Add this right before returning causes:
+            if len(causes) > num_causes:
+                causes = causes[:num_causes]  # Take only the first num_causes items
             return causes
         except Exception as e:
             print(f"Error identifying causes: {e}")
-            return ["Market prioritizes profit over social needs", "Regulatory barriers to affordable housing"]
+            return ["Market prioritizes profit over social needs", "Regulatory barriers"]
     
     def dig_deeper(self, problem: str, cause: str, depth: int = ROOT_CAUSE_DEPTH) -> Dict[str, Any]:
         """Recursively ask 'why' to dig deeper into root causes"""
@@ -197,10 +201,11 @@ class LateralThinkingEnhanced:
                             Think of how the dynamics in this metaphor could inspire a completely new approach to addressing the root cause.
                             Be bold, imaginative, and avoid conventional thinking.
                             
-                            Format your response as:
+                            ONLY Format your response as:
+                            SOLUTION TITLE: [A concise, marketable title for your solution - max 5 words]
                             METAPHORICAL INSIGHT: [How the metaphor reveals a new perspective]
-                            CREATIVE SOLUTION: [Detailed explanation of your solution]
-                            IMPLEMENTATION: [How it would work in practice]
+                            CREATIVE SOLUTION: [Detailed explanation of an idea inspired by the metaphor]
+                            IMPLEMENTATION: [A practical business model and service design including the reason to invest]
                             """
                         )
                         
@@ -260,7 +265,6 @@ class LateralThinkingEnhanced:
                 IMPACT: [score]
                 RELEVANCE: [score]
                 OVERALL: [average score]
-                FEEDBACK: [brief critical assessment]
                 """
             )
             
@@ -273,10 +277,9 @@ class LateralThinkingEnhanced:
                     "solution_content": solution["content"]
                 })
                 
-                # Parse scores and feedback
+                # Parse scores (without feedback)
                 scores = self._parse_evaluation(eval_result)
                 solution["scores"] = scores
-                solution["feedback"] = scores.get("feedback", "")
                 
                 # Add delay to avoid rate limiting
                 time.sleep(API_CALL_DELAY)
@@ -295,8 +298,7 @@ class LateralThinkingEnhanced:
             "feasibility": 0,
             "impact": 0,
             "relevance": 0,
-            "overall": 0,
-            "feedback": ""
+            "overall": 0
         }
         
         # Extract scores using simple parsing
@@ -328,14 +330,79 @@ class LateralThinkingEnhanced:
                     scores["overall"] = float(line.split("OVERALL:")[1].strip())
                 except:
                     pass
-            elif line.startswith("FEEDBACK:"):
-                scores["feedback"] = line.split("FEEDBACK:")[1].strip()
         
         # Calculate overall score if not provided
         if scores["overall"] == 0 and (scores["novelty"] + scores["feasibility"] + scores["impact"] + scores["relevance"] > 0):
             scores["overall"] = (scores["novelty"] + scores["feasibility"] + scores["impact"] + scores["relevance"]) / 4
         
         return scores
+
+    def _parse_solution_content(self, content: str) -> Dict[str, str]:
+        """Parse solution content into structured sections including title"""
+        sections = {
+            "title": "",
+            "insight": "",
+            "solution": "",
+            "implementation": "",
+            "other": ""
+        }
+        
+        # Normalize line endings and ensure proper handling of the content
+        full_content = content.replace('\r\n', '\n').replace('\r', '\n')
+        
+        # First check for the solution title
+        if "SOLUTION TITLE:" in full_content:
+            parts = full_content.split("SOLUTION TITLE:", 1)
+            # If there's content before the title, save it as other
+            if parts[0].strip():
+                sections["other"] = parts[0].strip()
+            
+            remaining = parts[1]
+            
+            # Extract title section
+            if "METAPHORICAL INSIGHT:" in remaining:
+                title_parts = remaining.split("METAPHORICAL INSIGHT:", 1)
+                sections["title"] = title_parts[0].strip()
+                remaining = "METAPHORICAL INSIGHT:" + title_parts[1]  # Add the header back for next split
+            else:
+                sections["title"] = remaining.strip()
+                remaining = ""
+        else:
+            # If no title found, continue with the regular parsing
+            remaining = full_content
+        
+        # Continue with existing parsing logic
+        if "METAPHORICAL INSIGHT:" in remaining:
+            parts = remaining.split("METAPHORICAL INSIGHT:", 1)
+            # If there's content before the insight and no title was found, it goes to other
+            if parts[0].strip() and not sections["title"] and not sections["other"]:
+                sections["other"] = parts[0].strip()
+            
+            remaining = parts[1]
+            
+            # Extract insight section
+            if "CREATIVE SOLUTION:" in remaining:
+                insight_parts = remaining.split("CREATIVE SOLUTION:", 1)
+                sections["insight"] = insight_parts[0].strip()
+                remaining = insight_parts[1]
+            else:
+                sections["insight"] = remaining.strip()
+                remaining = ""
+            
+            # Extract solution section
+            if "IMPLEMENTATION:" in remaining:
+                solution_parts = remaining.split("IMPLEMENTATION:", 1)
+                sections["solution"] = solution_parts[0].strip()
+                # Everything after IMPLEMENTATION: is the implementation section
+                sections["implementation"] = solution_parts[1].strip()
+            elif remaining:
+                sections["solution"] = remaining.strip()
+        else:
+            # If no section headers found, put everything in other
+            if not sections["other"]:  # Only if other doesn't already have content
+                sections["other"] = remaining.strip()
+        
+        return sections
 
     def analyze_problem(self, problem: str) -> Dict[str, Any]:
         """Complete analysis with evaluation"""
@@ -388,379 +455,21 @@ class LateralThinkingEnhanced:
         print("-" * 80)
 
     def generate_html_report(self, results: Dict[str, Any]) -> str:
-        """Generate an HTML report styled like JRF website"""
+        """Generate an HTML report styled with external CSS"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        # Create HTML content with a link to the external stylesheet
         html_content = f"""
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Root Cause Analysis: {html.escape(results['problem'])}</title>
+            <title>De Bono Thinking: {html.escape(results['problem'])}</title>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-            <style>
-                :root {{
-                    --jrf-purple: #5829a7;
-                    --jrf-purple-dark: #4a1e94;
-                    --jrf-purple-light: #9175c5;
-                    --jrf-text: #2e3132;
-                    --jrf-blue: #0071bc;
-                    --jrf-yellow: #ffc845;
-                    --jrf-light-gray: #f7f7f7;
-                    --jrf-mid-gray: #e6e6e6;
-                    --jrf-dark-gray: #6d6e71;
-                }}
-                
-                * {{
-                    box-sizing: border-box;
-                    margin: 0;
-                    padding: 0;
-                }}
-                
-                body {{
-                    font-family: 'Open Sans', Arial, sans-serif;
-                    line-height: 1.6;
-                    color: var(--jrf-text);
-                    background-color: #fff;
-                    margin: 0;
-                    padding: 0;
-                }}
-                
-                .top-bar {{
-                    background-color: var(--jrf-purple);
-                    height: 8px;
-                    width: 100%;
-                }}
-                
-                .header {{
-                    padding: 20px 5%;
-                    background-color: white;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                    position: sticky;
-                    top: 0;
-                    z-index: 100;
-                }}
-                
-                .header-content {{
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }}
-                
-                .logo {{
-                    font-family: 'Poppins', sans-serif;
-                    font-weight: 700;
-                    font-size: 24px;
-                    color: var(--jrf-purple);
-                    text-decoration: none;
-                }}
-                
-                .main-container {{
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 40px 5%;
-                }}
-                
-                .hero {{
-                    background-color: var(--jrf-purple);
-                    color: white;
-                    padding: 60px 5%;
-                    margin-bottom: 40px;
-                }}
-                
-                .hero-content {{
-                    max-width: 1200px;
-                    margin: 0 auto;
-                }}
-                
-                h1, h2, h3, h4 {{
-                    font-family: 'Poppins', sans-serif;
-                    margin-bottom: 20px;
-                    color: var(--jrf-purple);
-                }}
-                
-                .hero h1 {{
-                    color: white;
-                    font-size: 42px;
-                    margin-bottom: 15px;
-                    font-weight: 700;
-                }}
-                
-                .hero p {{
-                    font-size: 20px;
-                    max-width: 800px;
-                    margin-bottom: 0;
-                }}
-                
-                h1 {{
-                    font-size: 36px;
-                    font-weight: 600;
-                }}
-                
-                h2 {{
-                    font-size: 28px;
-                    font-weight: 600;
-                    padding-bottom: 10px;
-                    margin-top: 50px;
-                    position: relative;
-                }}
-                
-                h2::after {{
-                    content: '';
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    width: 60px;
-                    height: 4px;
-                    background-color: var(--jrf-purple);
-                }}
-                
-                h3 {{
-                    font-size: 22px;
-                    font-weight: 600;
-                    color: var(--jrf-text);
-                }}
-                
-                p {{
-                    margin-bottom: 20px;
-                }}
-                
-                .timestamp {{
-                    color: var(--jrf-dark-gray);
-                    font-size: 14px;
-                    text-align: right;
-                }}
-                
-                .domains-section {{
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 10px;
-                    margin: 30px 0;
-                }}
-                
-                .domain-tag {{
-                    background-color: var(--jrf-purple);
-                    color: white;
-                    padding: 10px 16px;
-                    border-radius: 4px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    display: inline-block;
-                    font-family: 'Poppins', sans-serif;
-                }}
-                
-                .cause-tree {{
-                    background-color: white;
-                    padding: 30px;
-                    border-radius: 8px;
-                    margin-bottom: 30px;
-                    border: 1px solid var(--jrf-mid-gray);
-                    box-shadow: 0 2px 15px rgba(0,0,0,0.03);
-                }}
-                
-                .cause-tree h3 {{
-                    margin-top: 0;
-                    color: var(--jrf-purple);
-                    border-bottom: 2px solid var(--jrf-mid-gray);
-                    padding-bottom: 15px;
-                    margin-bottom: 20px;
-                }}
-                
-                .cause-node {{
-                    padding-left: 20px;
-                    border-left: 3px solid var(--jrf-purple-light);
-                    margin-left: 10px;
-                    margin-top: 15px;
-                    padding-top: 5px;
-                    padding-bottom: 5px;
-                }}
-                
-                .cause-node p {{
-                    margin-bottom: 10px;
-                }}
-                
-                .solutions-grid {{
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(min(100%, 580px), 1fr));
-                    gap: 30px;
-                    margin-top: 30px;
-                }}
-                
-                .solution-card {{
-                    background-color: white;
-                    border-radius: 8px;
-                    padding: 30px;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-                    border: 1px solid var(--jrf-mid-gray);
-                    display: flex;
-                    flex-direction: column;
-                    height: 100%;
-                }}
-                
-                .solution-card h3 {{
-                    margin-top: 0;
-                    color: var(--jrf-purple);
-                    font-size: 20px;
-                    border-bottom: 2px solid var(--jrf-mid-gray);
-                    padding-bottom: 15px;
-                    margin-bottom: 15px;
-                }}
-                
-                .tags-container {{
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 8px;
-                    margin-bottom: 15px;
-                }}
-                
-                .solution-type {{
-                    background-color: var(--jrf-purple-light);
-                    color: white;
-                    display: inline-block;
-                    padding: 4px 12px;
-                    border-radius: 4px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    font-family: 'Poppins', sans-serif;
-                }}
-                
-                .domain-inspiration {{
-                    background-color: var(--jrf-blue);
-                    color: white;
-                    display: inline-block;
-                    padding: 4px 12px;
-                    border-radius: 4px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    font-family: 'Poppins', sans-serif;
-                }}
-                
-                .score-grid {{
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 15px;
-                    margin: 20px 0;
-                }}
-                
-                .score-item {{
-                    background-color: var(--jrf-light-gray);
-                    padding: 15px;
-                    border-radius: 6px;
-                }}
-                
-                .score-label {{
-                    font-weight: 600;
-                    color: var(--jrf-dark-gray);
-                    font-family: 'Poppins', sans-serif;
-                    font-size: 13px;
-                    margin-bottom: 5px;
-                }}
-                
-                .score-value {{
-                    font-size: 22px;
-                    font-weight: 700;
-                    color: var(--jrf-purple);
-                    font-family: 'Poppins', sans-serif;
-                }}
-                
-                .score-bar-container {{
-                    height: 6px;
-                    background-color: var(--jrf-mid-gray);
-                    border-radius: 3px;
-                    margin-top: 8px;
-                    overflow: hidden;
-                }}
-                
-                .score-bar {{
-                    height: 100%;
-                    background-color: var(--jrf-purple);
-                    border-radius: 3px;
-                }}
-                
-                .feedback-section {{
-                    background-color: var(--jrf-light-gray);
-                    padding: 20px;
-                    border-radius: 6px;
-                    margin-bottom: 20px;
-                    font-style: italic;
-                    border-left: 4px solid var(--jrf-yellow);
-                }}
-                
-                .content-section {{
-                    white-space: pre-line;
-                    line-height: 1.8;
-                    background-color: var(--jrf-light-gray);
-                    padding: 20px;
-                    border-radius: 6px;
-                    margin-top: auto;
-                    font-size: 15px;
-                }}
-                
-                .section-intro {{
-                    max-width: 800px;
-                    margin-bottom: 30px;
-                    color: var(--jrf-dark-gray);
-                }}
-                
-                footer {{
-                    background-color: var(--jrf-purple);
-                    color: white;
-                    padding: 50px 5% 30px;
-                    margin-top: 60px;
-                }}
-                
-                .footer-content {{
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    text-align: center;
-                }}
-                
-                .footer-logo {{
-                    font-family: 'Poppins', sans-serif;
-                    font-weight: 700;
-                    font-size: 24px;
-                    color: white;
-                    margin-bottom: 20px;
-                    display: inline-block;
-                }}
-                
-                .footer-text {{
-                    font-size: 14px;
-                    margin-top: 20px;
-                    color: rgba(255,255,255,0.8);
-                }}
-                
-                @media (max-width: 768px) {{
-                    .hero h1 {{
-                        font-size: 32px;
-                    }}
-                    
-                    .hero p {{
-                        font-size: 18px;
-                    }}
-                    
-                    h1 {{
-                        font-size: 28px;
-                    }}
-                    
-                    h2 {{
-                        font-size: 24px;
-                    }}
-                    
-                    .score-grid {{
-                        grid-template-columns: 1fr;
-                    }}
-                    
-                    .cause-node {{
-                        padding-left: 15px;
-                    }}
-                }}
-            </style>
+            <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=Lexend:wght@300;400&display=swap" rel="stylesheet">
+            <link rel="stylesheet" href="style.css">
         </head>
         <body>
             <div class="top-bar"></div>
@@ -773,12 +482,26 @@ class LateralThinkingEnhanced:
 
             <div class="hero">
                 <div class="hero-content">
-                    <h1>Root Cause Analysis</h1>
+                    <h1>Problem statement</h1>
                     <p>{html.escape(results['problem'])}</p>
                 </div>
             </div>
 
             <div class="main-container">
+                <section>
+                    <h2>Systemic Root Causes</h2>
+                    <p class="section-intro">By repeatedly asking "why," we identify deeper systemic causes behind the affordable housing crisis. Each branch explores a different causal pathway.</p>
+        """
+        
+        # Add root cause trees
+        for i, tree in enumerate(results['cause_trees'], 1):
+            html_content += f'<div class="cause-tree">\n<h3>Root Cause {html.escape(tree["cause"])}</h3>\n'
+            html_content += self._tree_to_html(tree)
+            html_content += '</div>\n'
+        
+        html_content += """
+                </section>
+                
                 <section>
                     <h2>Knowledge Domains</h2>
                     <p class="section-intro">These domains provide cross-disciplinary inspiration for innovative solutions, encouraging lateral thinking that breaks conventional problem-solving patterns.</p>
@@ -794,20 +517,6 @@ class LateralThinkingEnhanced:
                 </section>
 
                 <section>
-                    <h2>Systemic Root Causes</h2>
-                    <p class="section-intro">By repeatedly asking "why," we identify deeper systemic causes behind the affordable housing crisis. Each branch explores a different causal pathway.</p>
-        """
-        
-        # Add root cause trees
-        for i, tree in enumerate(results['cause_trees'], 1):
-            html_content += f'<div class="cause-tree">\n<h3>Root Cause {i}</h3>\n'
-            html_content += self._tree_to_html(tree)
-            html_content += '</div>\n'
-        
-        html_content += """
-                </section>
-
-                <section>
                     <h2>Innovative Solutions</h2>
                     <p class="section-intro">These solutions draw inspiration from diverse knowledge domains to tackle the affordable housing crisis. Each solution addresses specific root causes identified in our analysis.</p>
                     <div class="solutions-grid">
@@ -816,64 +525,75 @@ class LateralThinkingEnhanced:
         # Add solutions
         for i, solution in enumerate(results['solutions'], 1):
             overall_score = solution['scores'].get('overall', 0)
+            
+            # Parse solution content into sections (do this earlier to get the title)
+            sections = self._parse_solution_content(solution['content'])
+            
+            # Get the title or use a default
+            solution_title = sections.get('title', '').strip()
+            display_title = f" - {solution_title}" if solution_title else ""
+            
             html_content += f'''
                         <div class="solution-card">
-                            <h3>Solution {i} - Score: {overall_score:.1f}/10</h3>
+                            <h3>Solution {i}{display_title} (Score: {overall_score:.1f}/10)</h3>
                             <div class="tags-container">
                                 <div class="solution-type">Based on: {html.escape(solution['root_cause'][:40])}{"..." if len(solution['root_cause']) > 40 else ""}</div>
                     '''
             
             if solution['type'] == 'domain_inspired':
                 html_content += f'<div class="domain-inspiration">Inspired by: {html.escape(solution["domain"])}</div>'
+
+
             
+            # Close the tags-container properly, then start the score-grid on a new line
             html_content += f'''
                             </div>
                             
                             <div class="score-grid">
-                                <div class="score-item">
-                                    <div class="score-label">Novelty</div>
-                                    <div class="score-value">{solution['scores'].get('novelty', 'N/A')}</div>
-                                    <div class="score-bar-container">
-                                        <div class="score-bar" style="width: {solution['scores'].get('novelty', 0) * 10}%;"></div>
-                                    </div>
-                                </div>
-                                <div class="score-item">
-                                    <div class="score-label">Feasibility</div>
-                                    <div class="score-value">{solution['scores'].get('feasibility', 'N/A')}</div>
-                                    <div class="score-bar-container">
-                                        <div class="score-bar" style="width: {solution['scores'].get('feasibility', 0) * 10}%;"></div>
-                                    </div>
-                                </div>
-                                <div class="score-item">
-                                    <div class="score-label">Impact</div>
-                                    <div class="score-value">{solution['scores'].get('impact', 'N/A')}</div>
-                                    <div class="score-bar-container">
-                                        <div class="score-bar" style="width: {solution['scores'].get('impact', 0) * 10}%;"></div>
-                                    </div>
-                                </div>
-                                <div class="score-item">
-                                    <div class="score-label">Relevance</div>
-                                    <div class="score-value">{solution['scores'].get('relevance', 'N/A')}</div>
-                                    <div class="score-bar-container">
-                                        <div class="score-bar" style="width: {solution['scores'].get('relevance', 0) * 10}%;"></div>
-                                    </div>
-                                </div>
-                            </div>
                     '''
-            
-            # Add feedback if available
-            if solution.get('feedback'):
-                html_content += f'''
-                            <div class="feedback-section">
-                                <strong>Feedback:</strong> {html.escape(solution['feedback'])}
-                            </div>
-                        '''
             
             html_content += f'''
-                            <div class="content-section">{html.escape(solution['content'])}</div>
+                                <div class="score-item">
+                                    <div class="score-label">Novelty:</div>
+                                    <div class="score-value">{solution['scores'].get('novelty', 'N/A')}</div>
+                                </div>
+                                <div class="score-item">
+                                    <div class="score-label">Feasibility:</div>
+                                    <div class="score-value">{solution['scores'].get('feasibility', 'N/A')}</div>
+                                </div>
+                                <div class="score-item">
+                                    <div class="score-label">Impact:</div>
+                                    <div class="score-value">{solution['scores'].get('impact', 'N/A')}</div>
+                                </div>
+                                <div class="score-item">
+                                    <div class="score-label">Relevance:</div>
+                                    <div class="score-value">{solution['scores'].get('relevance', 'N/A')}</div>
+                                </div>
+                            </div>
+                    '''
+            
+            html_content += f'''
+                            <div class="solution-content">
+                                <div class="solution-section">
+                                    <div class="section-title">Domain Insight</div>
+                                    <div class="section-content">{html.escape(sections['insight'])}</div>
+                                </div>
+                                
+                                <div class="solution-section">
+                                    <div class="section-title">Creative Step</div>
+                                    <div class="section-content">{html.escape(sections['solution'])}</div>
+                                </div>
+                                
+                                <div class="solution-section">
+                                    <div class="section-title">Investment Opportunity</div>
+                                    <div class="section-content">{html.escape(sections['implementation'])}</div>
+                                </div>
+                                
+                                {f'<div class="solution-section"><div class="section-content">{html.escape(sections["other"])}</div></div>' if sections["other"] else ''}
+                            </div>
                         </div>
                     '''
-        
+            
         html_content += """
                     </div>
                 </section>
@@ -882,8 +602,8 @@ class LateralThinkingEnhanced:
             <footer>
                 <div class="footer-content">
                     <div class="footer-logo">De Bono Lateral Thinking</div>
-                    <p>Innovative systems-based approach to solving complex societal problems</p>
-                    <p class="footer-text">Generated using LateralThinkingEnhanced™ - De Bono-inspired innovative problem solving</p>
+                    <p>&copy; <script>document.write(new Date().getFullYear())</script> Your Company Name. All rights reserved. </p>
+                    <p class="footer-text"></p>
                 </div>
             </footer>
         </body>
@@ -920,7 +640,7 @@ def main():
     print(f"Problem statement: {problem}")
     
     # Run the analysis with progress indicators
-    print("\nAnalyzing problem (simplified version with fewer API calls)...\n")
+    print("\nAnalyzing problem...\n")
     results = analyzer.analyze_problem(problem)
     
     # Generate HTML report and open in browser
