@@ -1,5 +1,7 @@
 # Minimal dependencies with flexible versioning
 langchain-openai
 langchain-core
-python-dotenv
-numpys
+
+# Utilities
+python-dotenv==1.0.0
+numpy==1.24.3
