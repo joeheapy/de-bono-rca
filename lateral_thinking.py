@@ -61,6 +61,7 @@ class LateralThinkingEnhanced:
             template=f"""Generate {num_domains} specific knowledge domains or fields.
             
             These should be diverse across different areas of human knowledge.
+            DO NOT INCLUDE 'Quantum physics' or 'Astrophysics' or 'Enviromental science'.
             Format each as a concise domain name (1-4 words) with NO numbering or bullets.
             """
         )
@@ -82,10 +83,10 @@ class LateralThinkingEnhanced:
             input_variables=["problem", "num_causes"],
             template="""For the problem: '{problem}'
 
-Identify EXACTLY {num_causes} potential root cause(s) that might be contributing to the problem.
-Do NOT provide more than {num_causes} cause(s).
-Format the cause as a clear, concise statement without numbering.
-"""
+            Identify EXACTLY {num_causes} potential root cause(s) that might be contributing to the problem.
+            Do NOT provide more than {num_causes} cause(s).
+            Format the cause as a clear, concise statement without numbering.
+            """
         )
         
         # Use pipe operator

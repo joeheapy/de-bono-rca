@@ -11,13 +11,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PROBLEM_STATEMENT = "Low-income families in the United Kingdom face significant challenges accessing and affording fresh, nutritious foods. This problem creates and perpetuates health disparities, reduces quality of life, and imposes substantial long-term costs on individuals, communities, and healthcare systems."
 
 # API and processing parameters
-NUM_DOMAINS = 1
-NUM_INITIAL_CAUSES = 1
+NUM_DOMAINS = 3
+NUM_INITIAL_CAUSES = 2
 ROOT_CAUSE_DEPTH = 1
-MAX_LEAF_CAUSES = 1
+MAX_LEAF_CAUSES = 2
 SOLUTIONS_PER_DOMAIN = 1
 API_REQUEST_TIMEOUT = 30
-API_CALL_DELAY = 1
+API_CALL_DELAY = 0.5
 
 # LLM temperature settings
 ANALYST_TEMPERATURE = 0.3

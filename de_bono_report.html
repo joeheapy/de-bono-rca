@@ -210,6 +210,7 @@ p {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 580px), 1fr));
   gap: 30px;
   margin-top: 30px;
+  grid-auto-rows: minmax(auto, auto);
 }
 
 .solution-card {
@@ -220,17 +221,41 @@ p {
   border: 1px solid var(--jrf-mid-gray);
   display: flex;
   flex-direction: column;
+  height: auto;
   min-height: 100%;
   overflow: visible;
 }
 
-.solution-card h3 {
-  margin-top: 0;
-  color: var(--jrf-purple);
-  font-size: 20px;
-  border-bottom: 2px solid var(--jrf-mid-gray);
-  padding-bottom: 15px;
+.solution-content {
+  height: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+
+.solution-section {
+  height: auto;
+  flex-grow: 1;
+  background-color: var(--jrf-light-gray);
+  border-left: 4px solid var(--jrf-purple-light);
+  padding: 20px;
   margin-bottom: 15px;
+  border-radius: 6px;
+  overflow: visible;
+}
+
+.section-content {
+  min-height: auto;
+  font-family: 'Lexend', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  font-size: 15px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+  overflow: visible;
+  white-space: normal;
 }
 
 .tags-container {
@@ -684,7 +709,7 @@ footer {
         <header class="header">
             <div class="header-content">
                 <a href="#" class="logo">Social Investor Idea Generator</a>
-                <div class="timestamp">Generated on: 2025-03-30 22:38:42</div>
+                <div class="timestamp">Generated on: 2025-03-30 23:08:49</div>
             </div>
         </header>
 

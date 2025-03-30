@@ -102,7 +102,7 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
         
         # Add root cause trees
         for i, tree in enumerate(results['cause_trees'], 1):
-            html_content += f'<div class="cause-tree">\n<h3>Root Cause {html.escape(tree["cause"])}</h3>\n'
+            html_content += f'<div class="cause-tree">\n<h3>Root Cause {i}: {html.escape(tree["cause"])}</h3>\n'
             html_content += tree_to_html(tree)
             html_content += '</div>\n'
         
