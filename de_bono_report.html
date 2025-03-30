@@ -15,13 +15,13 @@
         <header class="header">
             <div class="header-content">
                 <a href="#" class="logo">De Bono Lateral Thinking</a>
-                <div class="timestamp">Generated on: 2025-03-30 17:06:50</div>
+                <div class="timestamp">Generated on: 2025-03-30 17:38:30</div>
             </div>
         </header>
 
         <div class="hero">
             <div class="hero-content">
-                <h1>Problem statement</h1>
+                <h1>What's the (social and systemic) problem?</h1>
                 <form id="problemForm" action="" method="post">
                     <div class="textarea-container">
                         <textarea 
@@ -145,7 +145,7 @@
                 // Create status message
                 const status = document.createElement('div');
                 status.className = 'processing-status';
-                status.textContent = 'Analyzing your problem...';
+                status.textContent = 'Analysing your problem...';
                 overlay.appendChild(status);
                 
                 // Create steps list
@@ -157,8 +157,8 @@
                     'Generating knowledge domains for lateral thinking',
                     'Identifying initial root causes',
                     'Building root cause trees',
-                    'Creating innovative solutions',
-                    'Evaluating solution effectiveness'
+                    'Generating solutions (this will take some time)',
+                    'Final evaluation and ranking'
                 ];
                 
                 stepsList.forEach((step, index) => {
@@ -180,21 +180,41 @@
                 overlay.appendChild(steps);
                 document.body.appendChild(overlay);
                 
-                // Simulate progress through steps
+                // Use variable timing for each step to better match the actual process
                 let currentStep = 0;
-                const progressInterval = setInterval(() => {
-                    currentStep++;
-                    if (currentStep < stepsList.length) {
+                const stepTimes = [3000, 3000, 4000, 15000, 5000]; // Allocate more time to solution generation
+                
+                function advanceStep() {
+                    if (currentStep < stepsList.length - 1) {
+                        currentStep++;
                         document.querySelectorAll('.processing-step').forEach(el => el.classList.remove('active'));
                         document.getElementById(`process-step-${currentStep}`).classList.add('active');
-                    } else {
-                        clearInterval(progressInterval);
+                        
+                        // If we've reached the generation step, update the status text
+                        if (currentStep === 3) {
+                            status.textContent = 'Creating innovative solutions...';
+                        }
+                        
+                        // Schedule next step with appropriate timing
+                        if (currentStep < stepsList.length - 1) {
+                            setTimeout(advanceStep, stepTimes[currentStep]);
+                        }
                     }
-                }, 5000); // Change step every 5 seconds
+                }
+                
+                // Start the progression
+                setTimeout(advanceStep, stepTimes[0]);
                 
                 return () => {
-                    clearInterval(progressInterval);
-                    document.body.removeChild(overlay);
+                    // Clear any pending timeouts by using a more comprehensive approach
+                    let id = window.setTimeout(function() {}, 0);
+                    while (id--) {
+                        window.clearTimeout(id);
+                    }
+                    
+                    if (document.body.contains(overlay)) {
+                        document.body.removeChild(overlay);
+                    }
                 };
             }
         </script>

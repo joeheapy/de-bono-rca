@@ -9,9 +9,12 @@ import time
 import webbrowser
 from datetime import datetime
 import html
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import urllib.parse
+import threading
 
 # Problem statement
-PROBLEM_STATEMENT = "Low-income families in the United Kingdom face significant challenges accessing and affording fresh, nutritious foods. This problem creates and perpetuates health disparities, reduces quality of life, and imposes substantial long-term costs on individuals, communities, and healthcare systems:"
+PROBLEM_STATEMENT = "Low-income families in the United Kingdom face significant challenges accessing and affording fresh, nutritious foods. This problem creates and perpetuates health disparities, reduces quality of life, and imposes substantial long-term costs on individuals, communities, and healthcare systems."
 
 # API and processing parameters
 NUM_DOMAINS = 1                  # Number of knowledge domains to generate for inspiration
@@ -465,7 +468,7 @@ Format the cause as a clear, concise statement without numbering.
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>De Bono Thinking: {html.escape(results['problem'])}</title>
+            <title>De Bono Thinking: Lateral Innovation Tool</title>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=Lexend:wght@300;400&display=swap" rel="stylesheet">
@@ -483,50 +486,82 @@ Format the cause as a clear, concise statement without numbering.
             <div class="hero">
                 <div class="hero-content">
                     <h1>Problem statement</h1>
-                    <p>{html.escape(results['problem'])}</p>
+                    <form id="problemForm" action="" method="post">
+                        <div class="textarea-container">
+                            <textarea 
+                                id="problemInput" 
+                                name="problem" 
+                                required 
+                                minlength="75" 
+                                maxlength="300" 
+                                placeholder="Describe the problem...">{html.escape(results['problem'])}</textarea>
+                            <div class="character-count">
+                                <span id="charCount">0</span>/300 characters (75 minimum)
+                            </div>
+                        </div>
+                        <div class="form-footer">
+                            <button type="button" onclick="resetForm()" class="refresh-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Clear Page
+                            </button>
+                            <button type="submit" class="generate-btn">Generate Solutions</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
             <div class="main-container">
+    """
+        
+        # 1. Root Causes Section
+        html_content += """
                 <section>
                     <h2>Systemic Root Causes</h2>
-                    <p class="section-intro">By repeatedly asking "why," we identify deeper systemic causes behind the affordable housing crisis. Each branch explores a different causal pathway.</p>
-        """
-        
+                    <p class="section-intro">By repeatedly asking "why," we identify deeper systemic causes behind the problem. Each branch explores a different causal pathway.</p>
+    """
+    
         # Add root cause trees
         for i, tree in enumerate(results['cause_trees'], 1):
-            html_content += f'<div class="cause-tree">\n<h3>Root Cause {html.escape(tree["cause"])}</h3>\n'
+            html_content += f'<div class="cause-tree">\n<h3>Root Cause {i}: {html.escape(tree["cause"])}</h3>\n'
             html_content += self._tree_to_html(tree)
             html_content += '</div>\n'
-        
+    
         html_content += """
                 </section>
-                
+    """
+    
+        # 2. Knowledge Domains Section
+        html_content += """
                 <section>
                     <h2>Knowledge Domains</h2>
                     <p class="section-intro">These domains provide cross-disciplinary inspiration for innovative solutions, encouraging lateral thinking that breaks conventional problem-solving patterns.</p>
                     <div class="domains-section">
-        """
-        
+    """
+    
         # Add domains
         for domain in results['domains']:
             html_content += f'<div class="domain-tag">{html.escape(domain)}</div>\n'
-        
+    
         html_content += """
                     </div>
                 </section>
-
+    """
+    
+        # 3. Solutions Section
+        html_content += """
                 <section>
-                    <h2>Innovative Solutions</h2>
-                    <p class="section-intro">These solutions draw inspiration from diverse knowledge domains to tackle the affordable housing crisis. Each solution addresses specific root causes identified in our analysis.</p>
+                    <h2>Ideas</h2>
+                    <p class="section-intro">These solutions draw inspiration from diverse knowledge domains to tackle the problem. Each solution addresses specific root causes identified in our analysis.</p>
                     <div class="solutions-grid">
-        """
-        
+    """
+    
         # Add solutions
         for i, solution in enumerate(results['solutions'], 1):
             overall_score = solution['scores'].get('overall', 0)
             
-            # Parse solution content into sections (do this earlier to get the title)
+            # Parse solution content into sections
             sections = self._parse_solution_content(solution['content'])
             
             # Get the title or use a default
@@ -534,78 +569,190 @@ Format the cause as a clear, concise statement without numbering.
             display_title = f" - {solution_title}" if solution_title else ""
             
             html_content += f'''
-                        <div class="solution-card">
-                            <h3>Solution {i}{display_title} (Score: {overall_score:.1f}/10)</h3>
-                            <div class="tags-container">
-                                <div class="solution-type">Based on: {html.escape(solution['root_cause'][:40])}{"..." if len(solution['root_cause']) > 40 else ""}</div>
-                    '''
-            
+                    <div class="solution-card">
+                        <h3>Solution {i}{display_title} (Score: {overall_score:.1f}/10)</h3>
+                        <div class="tags-container">
+                            <div class="solution-type">Based on: {html.escape(solution['root_cause'][:40])}{"..." if len(solution['root_cause']) > 40 else ""}</div>
+                '''
+        
             if solution['type'] == 'domain_inspired':
                 html_content += f'<div class="domain-inspiration">Inspired by: {html.escape(solution["domain"])}</div>'
-
-
-            
-            # Close the tags-container properly, then start the score-grid on a new line
+        
             html_content += f'''
+                        </div>
+                        
+                        <div class="score-grid">
+                            <div class="score-item">
+                                <div class="score-label">Novelty:</div>
+                                <div class="score-value">{solution['scores'].get('novelty', 'N/A')}</div>
                             </div>
-                            
-                            <div class="score-grid">
-                    '''
-            
-            html_content += f'''
-                                <div class="score-item">
-                                    <div class="score-label">Novelty:</div>
-                                    <div class="score-value">{solution['scores'].get('novelty', 'N/A')}</div>
-                                </div>
-                                <div class="score-item">
-                                    <div class="score-label">Feasibility:</div>
-                                    <div class="score-value">{solution['scores'].get('feasibility', 'N/A')}</div>
-                                </div>
-                                <div class="score-item">
-                                    <div class="score-label">Impact:</div>
-                                    <div class="score-value">{solution['scores'].get('impact', 'N/A')}</div>
-                                </div>
-                                <div class="score-item">
-                                    <div class="score-label">Relevance:</div>
-                                    <div class="score-value">{solution['scores'].get('relevance', 'N/A')}</div>
-                                </div>
+                            <div class="score-item">
+                                <div class="score-label">Feasibility:</div>
+                                <div class="score-value">{solution['scores'].get('feasibility', 'N/A')}</div>
                             </div>
-                    '''
-            
-            html_content += f'''
-                            <div class="solution-content">
-                                <div class="solution-section">
-                                    <div class="section-title">Domain Insight</div>
-                                    <div class="section-content">{html.escape(sections['insight'])}</div>
-                                </div>
-                                
-                                <div class="solution-section">
-                                    <div class="section-title">Creative Step</div>
-                                    <div class="section-content">{html.escape(sections['solution'])}</div>
-                                </div>
-                                
-                                <div class="solution-section">
-                                    <div class="section-title">Investment Opportunity</div>
-                                    <div class="section-content">{html.escape(sections['implementation'])}</div>
-                                </div>
-                                
-                                {f'<div class="solution-section"><div class="section-content">{html.escape(sections["other"])}</div></div>' if sections["other"] else ''}
+                            <div class="score-item">
+                                <div class="score-label">Impact:</div>
+                                <div class="score-value">{solution['scores'].get('impact', 'N/A')}</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-label">Relevance:</div>
+                                <div class="score-value">{solution['scores'].get('relevance', 'N/A')}</div>
                             </div>
                         </div>
-                    '''
-            
+                            
+                        <div class="solution-content">
+                            <div class="solution-section">
+                                <div class="section-title">Domain Insight</div>
+                                <div class="section-content">{html.escape(sections['insight'])}</div>
+                            </div>
+                            
+                            <div class="solution-section">
+                                <div class="section-title">Creative Step</div>
+                                <div class="section-content">{html.escape(sections['solution'])}</div>
+                            </div>
+                            
+                            <div class="solution-section">
+                                <div class="section-title">Investment Opportunity</div>
+                                <div class="section-content">{html.escape(sections['implementation'])}</div>
+                            </div>
+                            
+                            {f'<div class="solution-section"><div class="section-content">{html.escape(sections["other"])}</div></div>' if sections["other"] else ''}
+                        </div>
+                    </div>
+                '''
+    
         html_content += """
                     </div>
                 </section>
             </div>
+    """
 
-            <footer>
-                <div class="footer-content">
-                    <div class="footer-logo">De Bono Lateral Thinking</div>
-                    <p>&copy; <script>document.write(new Date().getFullYear())</script> Your Company Name. All rights reserved. </p>
-                    <p class="footer-text"></p>
-                </div>
-            </footer>
+        # Add JavaScript for character counting and validation before the closing body tag
+        html_content += """
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const textarea = document.getElementById('problemInput');
+                    const charCount = document.getElementById('charCount');
+                    const form = document.getElementById('problemForm');
+                    
+                    // Update character count on load
+                    charCount.textContent = textarea.value.length;
+                    
+                    // Update character count as user types
+                    textarea.addEventListener('input', function() {
+                        charCount.textContent = this.value.length;
+                        
+                        // Visual feedback based on character count
+                        if (this.value.length < 75) {
+                            charCount.classList.add('invalid');
+                            charCount.classList.remove('valid');
+                        } else {
+                            charCount.classList.add('valid');
+                            charCount.classList.remove('invalid');
+                        }
+                    });
+                    
+                    // Form validation
+                    form.addEventListener('submit', function(e) {
+                        if (textarea.value.length < 75) {
+                            e.preventDefault();
+                            alert('Please enter at least 75 characters for the problem statement.');
+                        } else {
+                            // Show processing overlay when form is submitted
+                            const hideOverlay = showProcessingOverlay();
+                            
+                            // Store the hideOverlay function so it can be called when response is received
+                            window.hideProcessingOverlay = hideOverlay;
+                        }
+                    });
+                    
+                    // Set initial focus to the textarea but place cursor at the end
+                    textarea.focus();
+                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                });
+
+                function resetForm() {
+                    // Fetch a clean form from the server
+                    fetch('/reset')
+                        .then(response => response.text())
+                        .then(html => {
+                            document.open();
+                            document.write(html);
+                            document.close();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            // Fallback to page reload if fetch fails
+                            window.location.reload();
+                        });
+                }
+
+                function showProcessingOverlay() {
+                    // Create overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'processing-overlay';
+                    
+                    // Create spinner
+                    const spinner = document.createElement('div');
+                    spinner.className = 'processing-spinner';
+                    overlay.appendChild(spinner);
+                    
+                    // Create status message
+                    const status = document.createElement('div');
+                    status.className = 'processing-status';
+                    status.textContent = 'Analyzing your problem...';
+                    overlay.appendChild(status);
+                    
+                    // Create steps list
+                    const steps = document.createElement('div');
+                    steps.className = 'processing-steps';
+                    
+                    // Add processing steps
+                    const stepsList = [
+                        'Generating knowledge domains for lateral thinking',
+                        'Identifying initial root causes',
+                        'Building root cause trees',
+                        'Creating innovative solutions',
+                        'Evaluating solution effectiveness'
+                    ];
+                    
+                    stepsList.forEach((step, index) => {
+                        const stepEl = document.createElement('div');
+                        stepEl.className = 'processing-step' + (index === 0 ? ' active' : '');
+                        stepEl.id = `process-step-${index}`;
+                        
+                        const indicator = document.createElement('span');
+                        indicator.className = 'step-indicator';
+                        stepEl.appendChild(indicator);
+                        
+                        const text = document.createElement('span');
+                        text.textContent = step;
+                        stepEl.appendChild(text);
+                        
+                        steps.appendChild(stepEl);
+                    });
+                    
+                    overlay.appendChild(steps);
+                    document.body.appendChild(overlay);
+                    
+                    // Simulate progress through steps
+                    let currentStep = 0;
+                    const progressInterval = setInterval(() => {
+                        currentStep++;
+                        if (currentStep < stepsList.length) {
+                            document.querySelectorAll('.processing-step').forEach(el => el.classList.remove('active'));
+                            document.getElementById(`process-step-${currentStep}`).classList.add('active');
+                        } else {
+                            clearInterval(progressInterval);
+                        }
+                    }, 5000); // Change step every 5 seconds
+                    
+                    return () => {
+                        clearInterval(progressInterval);
+                        document.body.removeChild(overlay);
+                    };
+                }
+            </script>
         </body>
         </html>
         """
@@ -631,32 +778,143 @@ Format the cause as a clear, concise statement without numbering.
         html_content += '</div>\n'
         return html_content
 
+# Update the main function to handle form submissions
+
 def main():
     # Initialize the analyzer
     analyzer = LateralThinkingEnhanced()
     
-    # Use the default problem statement
+    # Default problem statement
     problem = PROBLEM_STATEMENT
-    print(f"Problem statement: {problem}")
     
-    # Run the analysis with progress indicators
-    print("\nAnalyzing problem...\n")
-    results = analyzer.analyze_problem(problem)
+    # Create a simple HTTP server to handle form submissions
+    class FormHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/style.css':
+                # Serve CSS file
+                css_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "style.css")
+                self.send_response(200)
+                self.send_header('Content-type', 'text/css')
+                self.end_headers()
+                with open(css_path, 'rb') as f:
+                    self.wfile.write(f.read())
+            elif self.path == '/reset':
+                # Return a clean form without any generated content
+                results = {
+                    "problem": PROBLEM_STATEMENT,  # Reset to default problem
+                    "domains": [],
+                    "cause_trees": [],
+                    "solutions": []
+                }
+                
+                # Generate fresh HTML content
+                analyzer.generate_html_report(results)
+                
+                # Read the generated HTML and serve it
+                report_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rca_report.html")
+                with open(report_path, 'r') as f:
+                    html_content = f.read()
+                    
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(html_content.encode())
+            else:
+                # Serve the main HTML page
+                # Generate report data
+                results = {
+                    "problem": problem,
+                    "domains": [],
+                    "cause_trees": [],
+                    "solutions": []
+                }
+                
+                # Generate HTML content
+                analyzer.generate_html_report(results)
+                
+                # Read the generated HTML file and serve it
+                report_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rca_report.html")
+                with open(report_path, 'r') as f:
+                    html_content = f.read()
+                    
+                # Serve the HTML directly
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(html_content.encode())
+        
+        def do_POST(self):
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length).decode('utf-8')
+            form_data = urllib.parse.parse_qs(post_data)
+            
+            # Extract the problem statement from the form
+            new_problem = form_data.get('problem', [problem])[0]
+            
+            # Validate character count
+            if len(new_problem) < 75 or len(new_problem) > 300:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b'Problem statement must be between 75 and 300 characters.')
+                return
+            
+            print(f"Problem statement: {new_problem}")
+            
+            # Run the analysis with progress indicators
+            print("\nAnalyzing problem...\n")
+            results = analyzer.analyze_problem(new_problem)
+            
+            # Generate HTML report
+            print("\nGenerating HTML report...")
+            analyzer.generate_html_report(results)
+            
+            # Print a summary to the console
+            print("\n=== ANALYSIS COMPLETE ===")
+            print(f"- Problem: {new_problem}")
+            print(f"- Domains: {', '.join(results['domains'])}")
+            print(f"- Root causes identified: {len(results['cause_trees'])}")
+            print(f"- Solutions generated: {len(results['solutions'])}")
+            
+            # Read the generated HTML file and serve it
+            report_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rca_report.html")
+            with open(report_path, 'r') as f:
+                html_content = f.read()
+            
+            html_content = html_content.replace('</body>', '''
+            <script>
+            // Hide the processing overlay if it exists
+            if (window.hideProcessingOverlay) {
+                window.hideProcessingOverlay();
+            }
+            </script>
+            </body>''')
+            
+            # Serve the HTML directly
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(html_content.encode())
     
-    # Generate HTML report and open in browser
-    print("\nGenerating HTML report...")
-    report_path = analyzer.generate_html_report(results)
+    # Start HTTP server to handle form submissions
+    def run_server():
+        server = HTTPServer(('localhost', 8000), FormHandler)
+        print('Starting server at http://localhost:8000')
+        server.serve_forever()
     
-    print(f"Opening report in browser: {report_path}")
-    webbrowser.open('file://' + report_path)
+    # Start server in a separate thread
+    server_thread = threading.Thread(target=run_server)
+    server_thread.daemon = True
+    server_thread.start()
     
-    # Also print a summary to the console
-    print("\n=== ANALYSIS COMPLETE ===")
-    print(f"- Problem: {problem}")
-    print(f"- Domains: {', '.join(results['domains'])}")
-    print(f"- Root causes identified: {len(results['cause_trees'])}")
-    print(f"- Solutions generated: {len(results['solutions'])}")
-    print(f"- Full report available at: {report_path}")
+    # Open the initial report in the browser
+    webbrowser.open('http://localhost:8000')
+    
+    # Keep main thread running
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nShutting down...")
 
 if __name__ == "__main__":
     main()

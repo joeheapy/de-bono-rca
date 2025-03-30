@@ -68,11 +68,17 @@ body {
   color: white;
   padding: 40px 5%;
   margin-bottom: 40px;
+  padding-bottom: 50px; /* Ensure there's enough space at the bottom */
 }
 
 .hero-content {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
+  padding: 20px 0;
+}
+
+.hero-content h1 {
+  margin-bottom: 20px;
 }
 
 h1,
@@ -356,6 +362,108 @@ p {
   overflow: visible;
 }
 
+/* Add these styles for the textarea form in the hero section */
+
+.textarea-container {
+  position: relative;
+  margin-bottom: 25px; /* Increased to accommodate larger textarea */
+  width: 100%;
+}
+
+#problemInput {
+  width: 100%;
+  min-height: 240px; /* Increased from 120px to 180px */
+  padding: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-family: 'Lexend', sans-serif;
+  font-size: 24px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+#problemInput:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+#problemInput::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.character-count {
+  position: absolute;
+  bottom: -20px;
+  right: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Lexend', sans-serif;
+}
+
+.character-count .invalid {
+  color: #ffcc00;
+}
+
+.character-count .valid {
+  color: #a0ffb0;
+}
+
+/* Add styling for the refresh button */
+
+.refresh-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 24px;
+  font-family: 'Lexend', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.refresh-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.refresh-btn svg {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.generate-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-family: 'Lexend', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.generate-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
 footer {
   background-color: var(--jrf-purple);
   color: white;
@@ -459,5 +567,101 @@ footer {
   .footer-logo,
   .footer-text {
     color: var(--jrf-purple);
+  }
+}
+
+/* Loading spinner */
+
+.loading-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid var(--jrf-purple);
+  width: 40px;
+  height: 40px;
+  margin: 20px auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Add these styles to style.css */
+
+.processing-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(21, 38, 60, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  color: white;
+  font-family: 'Lexend', sans-serif;
+}
+
+.processing-spinner {
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 6px solid var(--jrf-purple-light);
+  width: 60px;
+  height: 60px;
+  margin: 20px auto;
+  animation: spin 1.5s linear infinite;
+}
+
+.processing-status {
+  margin-top: 30px;
+  font-size: 18px;
+  text-align: center;
+  max-width: 80%;
+}
+
+.processing-steps {
+  margin-top: 20px;
+  padding: 0 30px;
+  font-size: 14px;
+}
+
+.processing-step {
+  opacity: 0.6;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+}
+
+.processing-step.active {
+  opacity: 1;
+  font-weight: 400;
+}
+
+.step-indicator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin-right: 10px;
+}
+
+.active .step-indicator {
+  background-color: var(--jrf-purple-light);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
