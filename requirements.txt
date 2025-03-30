@@ -1,4 +1,5 @@
 # Minimal dependencies with flexible versioning
 langchain-openai
+langchain-core
 python-dotenv
-numpy
+numpys
