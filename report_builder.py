@@ -40,7 +40,7 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
         <div class="top-bar"></div>
         <header class="header">
             <div class="header-content">
-                <a href="#" class="logo">De Bono Lateral Thinking</a>
+                <a href="#" class="logo">Social Investor Idea Generator</a>
                 <div class="timestamp">Generated on: {timestamp}</div>
             </div>
         </header>
@@ -95,7 +95,7 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
         
         # Add root cause trees
         for i, tree in enumerate(results['cause_trees'], 1):
-            html_content += f'<div class="cause-tree">\n<h3>Root Cause {i}: {html.escape(tree["cause"])}</h3>\n'
+            html_content += f'<div class="cause-tree">\n<h3>Root Cause {html.escape(tree["cause"])}</h3>\n'
             html_content += tree_to_html(tree)
             html_content += '</div>\n'
         
@@ -304,8 +304,8 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                     'Generating knowledge domains for lateral thinking',
                     'Identifying initial root causes',
                     'Building root cause trees',
-                    'Generating solutions (this will take some time)',
-                    'Final evaluation and ranking'
+                    'Having ideas',
+                    'Writing and ranking ideas (this will take some time)'
                 ];
                 
                 stepsList.forEach((step, index) => {
@@ -329,7 +329,7 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                 
                 // Use variable timing for each step to better match the actual process
                 let currentStep = 0;
-                const stepTimes = [3000, 3000, 4000, 15000, 5000]; // Allocate more time to solution generation
+                const stepTimes = [3000, 7000, 10000, 15000, 15000]; 
                 
                 function advanceStep() {
                     if (currentStep < stepsList.length - 1) {
