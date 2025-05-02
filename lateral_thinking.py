@@ -138,7 +138,8 @@ class LateralThinkingEnhanced:
             print(f"Error in dig_deeper for cause '{cause}': {e}")
             return {"cause": cause, "children": []}
     
-    def challenge_assumptions(self, problem: str, cause_tree: Dict[str, Any], domains: List[str]) -> List[Dict[str, Any]]:
+    def challenge_assumptions(self, problem: str, cause_tree: Dict[str, Any], domains: List[str], 
+                              max_leaf_causes=MAX_LEAF_CAUSES, solutions_per_domain=SOLUTIONS_PER_DOMAIN) -> List[Dict[str, Any]]:
         """Generate solutions using metaphor-based lateral thinking"""
         
         # Extract leaf nodes (deepest causes)
@@ -151,17 +152,17 @@ class LateralThinkingEnhanced:
             return leaves
         
         leaf_causes = extract_leaf_nodes(cause_tree)
-        # Limit to configured max leaf causes
-        if len(leaf_causes) > MAX_LEAF_CAUSES:
-            leaf_causes = leaf_causes[:MAX_LEAF_CAUSES]
-            
+        # Limit to max leaf causes
+        if len(leaf_causes) > max_leaf_causes:
+            leaf_causes = leaf_causes[:max_leaf_causes]
+        
         solutions = []
         
         for leaf_cause in leaf_causes:
             # Use ALL domains instead of just the first one
             for domain in domains:
                 # Generate multiple solutions per domain-cause pair
-                for solution_num in range(1, SOLUTIONS_PER_DOMAIN + 1):
+                for solution_num in range(1, solutions_per_domain + 1):
                     # STEP 1: Generate a powerful metaphor from the domain
                     metaphor_prompt = PromptTemplate(
                         input_variables=["domain"],
@@ -287,26 +288,34 @@ class LateralThinkingEnhanced:
         # Sort solutions by overall score
         return sorted(solutions, key=lambda x: x["scores"].get("overall", 0), reverse=True)
 
-    def analyze_problem(self, problem: str) -> Dict[str, Any]:
+    def analyze_problem(self, problem: str, config=None) -> Dict[str, Any]:
         """Complete analysis with evaluation"""
+        # Use provided config or default to global constants
+        cfg = config or {}
+        num_domains = cfg.get('num_domains', NUM_DOMAINS)  # Add this line for domains
+        num_initial_causes = cfg.get('num_initial_causes', NUM_INITIAL_CAUSES)
+        root_cause_depth = cfg.get('root_cause_depth', ROOT_CAUSE_DEPTH)
+        max_leaf_causes = cfg.get('max_leaf_causes', MAX_LEAF_CAUSES)
+        solutions_per_domain = cfg.get('solutions_per_domain', SOLUTIONS_PER_DOMAIN)
+        
         print("1. Generating knowledge domains...")
-        domains = self.generate_random_domains(NUM_DOMAINS)
+        domains = self.generate_random_domains(num_domains)  # Use configurable value
         
         print("2. Identifying initial causes...")
-        initial_causes = self.identify_initial_causes(problem, NUM_INITIAL_CAUSES)
+        initial_causes = self.identify_initial_causes(problem, num_initial_causes)
         
         print("3. Building root cause trees...")
         cause_trees = []
         for i, cause in enumerate(initial_causes):
             print(f"   Analyzing cause {i+1}/{len(initial_causes)}: {cause[:30]}...")
-            tree = self.dig_deeper(problem, cause, depth=ROOT_CAUSE_DEPTH)
+            tree = self.dig_deeper(problem, cause, depth=root_cause_depth)
             cause_trees.append(tree)
         
         print("4. Generating solutions...")
         all_solutions = []
         for i, tree in enumerate(cause_trees):
             print(f"   Generating solutions for tree {i+1}/{len(cause_trees)}...")
-            solutions = self.challenge_assumptions(problem, tree, domains)
+            solutions = self.challenge_assumptions(problem, tree, domains, max_leaf_causes, solutions_per_domain)
             all_solutions.extend(solutions)
         
         # Add evaluation step

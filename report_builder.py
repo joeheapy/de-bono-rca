@@ -68,6 +68,32 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                             <span id="charCount">0</span>/300 characters (75 minimum)
                         </div>
                     </div>
+                    <div class="analysis-level">
+                        <label class="analysis-level-label">Analysis Level:</label>
+                        <div class="level-options">
+                            <label class="level-option">
+                                <input type="radio" name="analysis_level" value="fastest" checked>
+                                <div class="option-content">
+                                    <span class="option-name">Fastest</span>
+                                    <span class="option-desc">Quick analysis with fewer ideas (1-2 min)</span>
+                                </div>
+                            </label>
+                            <label class="level-option">
+                                <input type="radio" name="analysis_level" value="balanced">
+                                <div class="option-content">
+                                    <span class="option-name">Balanced</span>
+                                    <span class="option-desc">Standard depth and variety (2-5 min)</span>
+                                </div>
+                            </label>
+                            <label class="level-option">
+                                <input type="radio" name="analysis_level" value="deepest">
+                                <div class="option-content">
+                                    <span class="option-name">Deepest</span>
+                                    <span class="option-desc">Thorough analysis with more ideas (15+ min)</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
                     <div class="form-footer">
                         <button type="button" onclick="resetForm()" class="refresh-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
