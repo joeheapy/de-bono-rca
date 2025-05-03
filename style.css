@@ -690,3 +690,77 @@ footer {
     transform: rotate(360deg);
   }
 }
+
+/* Analysis Level Selector Styles - Updated for dark theme */
+.analysis-level {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: rgba(255, 255, 255, 0.1); /* Match textarea background */
+  border: 2px solid rgba(255, 255, 255, 0.2); /* Match textarea border */
+  border-radius: 8px;
+}
+
+.analysis-level-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: white; /* Changed to white to match form text */
+}
+
+.level-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.level-option {
+  flex: 1 1 30%;
+  min-width: 160px;
+  display: flex;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.3); /* Lighter border for contrast */
+  padding: 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.level-option:hover {
+  border-color: white; /* Brighter on hover */
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.level-option input[type='radio'] {
+  margin-right: 10px;
+}
+
+.level-option input[type='radio']:checked + .option-content {
+  color: white; /* Changed to white instead of purple */
+  font-weight: 500;
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+  color: white; /* Added to ensure text is always white */
+}
+
+.option-name {
+  font-weight: 500;
+  color: white; /* Ensure visibility */
+}
+
+.option-desc {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.8); /* Slightly dimmed but still readable */
+}
+
+/* Checked state enhancements */
+.level-option input[type='radio']:checked + .option-content .option-name {
+  color: var(--jrf-purple-light); /* Use light purple for better visibility */
+}
+
+/* Add a selected background state */
+.level-option:has(input[type='radio']:checked) {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: white;
+}
