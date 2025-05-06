@@ -75,7 +75,7 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                                 <input type="radio" name="analysis_level" value="fastest" checked>
                                 <div class="option-content">
                                     <span class="option-name">Fastest</span>
-                                    <span class="option-desc">Quick analysis generates four ideas in about 30 seconds)</span>
+                                    <span class="option-desc">Quick analysis generates four ideas in about 30 seconds</span>
                                 </div>
                             </label>
                             <label class="level-option">
@@ -89,7 +89,7 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                                 <input type="radio" name="analysis_level" value="deepest">
                                 <div class="option-content">
                                     <span class="option-name">Deepest</span>
-                                    <span class="option-desc">Thorough analysis generates 64 ideas in around 8 minutes)</span>
+                                    <span class="option-desc">Thorough analysis generates 64 ideas in around 8 minutes</span>
                                 </div>
                             </label>
                         </div>
@@ -264,15 +264,16 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
             
             # Process IMPLEMENTATION section
             implementation = ""
-            for i, line in enumerate(content_lines):
-                if line.startswith("IMPLEMENTATION:"):
+            start_collecting = False
+            for line in content_lines:
+                if start_collecting:
+                    # Check if we've reached a new section
+                    if any(line.startswith(section) for section in ["SOLUTION TITLE:", "KEY IDEA APPLICATION:"]):
+                        break
+                    implementation += " " + line.strip()
+                elif line.startswith("IMPLEMENTATION:"):
                     implementation = line[len("IMPLEMENTATION:"):].strip()
-                    # Look for multi-line content
-                    next_idx = i + 1
-                    while next_idx < len(content_lines) and not content_lines[next_idx].startswith("SOLUTION TITLE:") and not content_lines[next_idx].startswith("KEY IDEA APPLICATION:"):
-                        implementation += " " + content_lines[next_idx].strip()
-                        next_idx += 1
-                    break
+                    start_collecting = True
             
             if implementation:
                 html_content += f'''
