@@ -2,7 +2,7 @@ De Bono Lateral Thinking Tool
 A powerful AI-powered lateral thinking application that helps identify root causes and generate innovative solutions for complex problems using cross-domain inspiration.
 
 🧠 Overview
-This tool applies Edward de Bono's lateral thinking principles combined with modern AI to help users analyze problems more deeply and generate creative solutions. By systematically exploring root causes and borrowing metaphors from diverse knowledge domains, it breaks conventional thinking patterns and promotes innovation.
+This tool applies Edward de Bono's lateral thinking principles combined with modern AI to help users analyze problems more deeply and generate creative solutions. By systematically exploring root causes and borrowing KEY_IDEAs from diverse knowledge domains, it breaks conventional thinking patterns and promotes innovation.
 
 ✨ Key Features
 Root Cause Analysis: Recursively asks "why" to dig deeper into systemic causes
@@ -15,7 +15,7 @@ Problem Definition: Enter a clear problem statement (75-300 characters)
 Root Cause Identification: The system analyzes your problem and identifies potential root causes
 Causal Exploration: For each root cause, the system builds a tree of deeper causes
 Knowledge Domain Generation: Random domains are selected to inspire lateral thinking
-Creative Solution Generation: The system creates solutions by applying metaphors from these domains
+Creative Solution Generation: The system creates solutions by applying KEY_IDEAs from these domains
 Evaluation: Each solution is scored on multiple dimensions
 Results Presentation: A comprehensive report is generated with all findings
 

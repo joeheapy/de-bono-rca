@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler
 import urllib.parse
 from config import PROBLEM_STATEMENT
 from report_builder import generate_html_report
+from analysis_levels import get_analysis_config
 
 class FormHandler(BaseHTTPRequestHandler):
     def __init__(self, *args, analyzer=None, **kwargs):
@@ -85,7 +86,7 @@ class FormHandler(BaseHTTPRequestHandler):
         print(f"Analysis level: {analysis_level}")
         
         # Configure analysis parameters based on selected level
-        config = self.get_analysis_config(analysis_level)
+        config = get_analysis_config(analysis_level)
         
         # Run the analysis with progress indicators and configuration
         print("\nAnalyzing problem...\n")
@@ -121,29 +122,3 @@ class FormHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(html_content.encode())
     
-    def get_analysis_config(self, level):
-        """Return configuration parameters based on analysis level"""
-        if level == 'fastest':
-            return {
-                'num_domains': 2,  # Minimal domains for fastest analysis
-                'num_initial_causes': 2,
-                'root_cause_depth': 1,
-                'max_leaf_causes': 2,
-                'solutions_per_domain': 1
-            }
-        elif level == 'deepest':
-            return {
-                'num_domains': 4,  # More domains for deeper analysis
-                'num_initial_causes': 4,
-                'root_cause_depth': 3,
-                'max_leaf_causes': 4,
-                'solutions_per_domain': 1
-            }
-        else:  # balanced (default)
-            return {
-                'num_domains': 3,  # Standard number of domains
-                'num_initial_causes': 3,
-                'root_cause_depth': 2,
-                'max_leaf_causes': 3,
-                'solutions_per_domain': 1
-            }

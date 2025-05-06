@@ -140,7 +140,7 @@ class LateralThinkingEnhanced:
     
     def challenge_assumptions(self, problem: str, cause_tree: Dict[str, Any], domains: List[str], 
                               max_leaf_causes=MAX_LEAF_CAUSES, solutions_per_domain=SOLUTIONS_PER_DOMAIN) -> List[Dict[str, Any]]:
-        """Generate solutions using metaphor-based lateral thinking"""
+        """Generate solutions using Random Word Stimulation, a creative thinking tool where a random word or image is used to spark new ideas and perspectives"""
         
         # Extract leaf nodes (deepest causes)
         def extract_leaf_nodes(node):
@@ -163,65 +163,79 @@ class LateralThinkingEnhanced:
             for domain in domains:
                 # Generate multiple solutions per domain-cause pair
                 for solution_num in range(1, solutions_per_domain + 1):
-                    # STEP 1: Generate a powerful metaphor from the domain
-                    metaphor_prompt = PromptTemplate(
+                    # STEP 1: Generate a powerful key_idea from the domain
+                    key_idea_prompt = PromptTemplate(
                         input_variables=["domain"],
-                        template="""From the domain of '{domain}', generate a powerful, unexpected metaphor or conceptual model.
+                        template="""Within the field of '{domain}', name one pivotal concept or theory that has strongly influenced subsequent work. Give its title, the scholar(s) most associated with it, and explain—in no more than three sentences—why it is considered foundational.
                         
                         Choose something non-obvious that could provide a fresh perspective on other problems.
-                        Explain the key dynamics, patterns, or principles that make this metaphor interesting.
+                        Explain the key dynamics, patterns, or principles that make this key_idea interesting.
+
+                        Consider the concept key idea, originally formulated within '{domain}'.
+
+                        Abstract it: Distil the idea to its essential mechanism or principle, stripping away domain-specific terminology.
+
+                        Translate it: Restate the abstraction so it can guide the design, governance, or analysis of a social system (e.g., a community network, public service, or organisational culture). 
+
+                        For example, if the key_idea is 'The Butterfly Effect' from Chaos Theory, the abstraction might be 'Small changes can lead to large consequences', and the translation could be 'A small change in a community's communication structure can lead to significant shifts in social dynamics'.
                         
-                        Format as:
-                        METAPHOR: [The metaphor/model from {domain}]
-                        DYNAMICS: [How this system/pattern works]
+
+                        ONLY Format as:
+                        KEY_IDEA: [The key idea title and description from {domain} as one string]
+                        ABSTRACTION: [How this key idea can be abstracted to a more general level to apply to other domains]
+                        TRANSLATION: [How this key idea can be translated to apply to a social system]
                         """
                     )
                     
                     try:
-                        # Generate the metaphor first
-                        metaphor_chain = metaphor_prompt | self.challenger_llm
-                        metaphor_response = metaphor_chain.invoke({"domain": domain})
+                        # Generate the key_idea first
+                        key_idea_chain = key_idea_prompt | self.challenger_llm
+                        key_idea_response = key_idea_chain.invoke({"domain": domain})
                         
                         # Add delay to avoid rate limiting
                         time.sleep(API_CALL_DELAY)
                         
-                        # STEP 2: Apply the metaphor to generate a creative solution
+                        # STEP 2: Apply the key_idea to generate a creative solution
                         solution_prompt = PromptTemplate(
-                            input_variables=["problem", "cause", "metaphor", "solution_num"],
+                            input_variables=["problem", "cause", "key_idea", "solution_num"],
                             template="""For the problem: '{problem}'
                             Addressing this root cause: '{cause}'
                             
-                            Consider this metaphor:
-                            {metaphor}
+                            Consider this key idea:
+                            {key_idea}
                             
-                            For solution #{solution_num}, create an innovative solution by applying this metaphor to the problem.
-                            Think of how the dynamics in this metaphor could inspire a completely new approach to addressing the root cause.
-                            Be bold, imaginative, and avoid conventional thinking.
+                            For solution #{solution_num}, create an innovative solution using lateral thinking to apply this key idea to the root cause of the problem.
+            
+                            The solution should be a new product, service, or public policy idea that is inspired by the key idea. 
+                            Be imaginative and bold.
+                            The solution should be practical and feasible.
+                            Include a description of the role of public and private actors in the social system.
+                            Describe how the solution would work in practice, including any necessary steps or processes.
+                            
                             
                             ONLY Format your response as:
                             SOLUTION TITLE: [A concise, marketable title for your solution - max 5 words]
-                            METAPHORICAL INSIGHT: [How the metaphor reveals a new perspective]
-                            CREATIVE SOLUTION: [Detailed explanation of an idea inspired by the metaphor]
-                            IMPLEMENTATION: [A practical business model and service design including the reason to invest]
+                            KEY IDEA APPLICATION: [How the APPLICATION reveals a new perspective on the root cause]
+                            IMPLEMENTATION: [A practical public policy idea, a new product, or a service that could be implemented. ONLY write in short paragraphs. DO NOT add additional titles in the response.]
                             """
                         )
                         
-                        # Use the metaphor to generate the solution
+                        # Use the key_idea to generate the solution
                         solution_chain = solution_prompt | self.challenger_llm
                         solution_response = solution_chain.invoke({
                             "problem": problem,
                             "cause": leaf_cause,
-                            "metaphor": metaphor_response,
+                            "key_idea": key_idea_response,
                             "solution_num": solution_num
                         })
                         
-                        # Store both the metaphor and the solution
+                        # Store both the key_idea and the solution
                         solution = {
                             "root_cause": leaf_cause,
                             "type": "domain_inspired",
                             "domain": domain,
                             "solution_number": solution_num,
-                            "metaphor": metaphor_response,
+                            "key_idea": key_idea_response,
                             "content": solution_response,
                             "scores": {"overall": 5.0}  # Default score, will be replaced
                         }
@@ -231,7 +245,7 @@ class LateralThinkingEnhanced:
                         time.sleep(API_CALL_DELAY)
                         
                     except Exception as e:
-                        print(f"Error generating metaphorical solution for {domain}: {e}")
+                        print(f"Error generating key_ideaical solution for {domain}: {e}")
         
         return solutions
     

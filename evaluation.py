@@ -69,10 +69,10 @@ def parse_solution_content(content: str) -> Dict[str, str]:
         remaining = parts[1]
         
         # Extract title section
-        if "METAPHORICAL INSIGHT:" in remaining:
-            title_parts = remaining.split("METAPHORICAL INSIGHT:", 1)
+        if "KEY_IDEAICAL INSIGHT:" in remaining:
+            title_parts = remaining.split("KEY_IDEAICAL INSIGHT:", 1)
             sections["title"] = title_parts[0].strip()
-            remaining = "METAPHORICAL INSIGHT:" + title_parts[1]  # Add the header back for next split
+            remaining = "KEY_IDEAICAL INSIGHT:" + title_parts[1]  # Add the header back for next split
         else:
             sections["title"] = remaining.strip()
             remaining = ""
@@ -81,8 +81,8 @@ def parse_solution_content(content: str) -> Dict[str, str]:
         remaining = full_content
     
     # Continue with existing parsing logic
-    if "METAPHORICAL INSIGHT:" in remaining:
-        parts = remaining.split("METAPHORICAL INSIGHT:", 1)
+    if "KEY_IDEAICAL INSIGHT:" in remaining:
+        parts = remaining.split("KEY_IDEAICAL INSIGHT:", 1)
         # If there's content before the insight and no title was found, it goes to other
         if parts[0].strip() and not sections["title"] and not sections["other"]:
             sections["other"] = parts[0].strip()

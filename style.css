@@ -85,6 +85,7 @@ h1,
 h2,
 h3,
 h4 {
+  text-transform: capitalize;
   font-family: 'DM Serif Text', serif;
   font-weight: 400;
   margin-bottom: 20px;
@@ -174,6 +175,7 @@ p {
 }
 
 .cause-tree h3 {
+  text-transform: capitalize;
   margin-top: 0;
   color: var(--jrf-purple);
   border-bottom: 2px solid var(--jrf-mid-gray);
@@ -235,7 +237,11 @@ p {
 }
 
 .section-content {
-  min-height: auto;
+  background-color: var(--jrf-light-gray);
+  border-left: 4px solid var(--jrf-purple-light);
+  padding: 20px;
+  margin-bottom: 15px;
+  border-radius: 6px;
   font-family: 'Lexend', sans-serif;
   font-weight: 300;
   line-height: 1.7;
@@ -278,7 +284,7 @@ p {
 
 .score-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Four columns for one row */
+  grid-template-columns: repeat(5, 1fr); /* Four columns for one row */
   gap: 6px;
   margin: 0 0 15px 0; /* Removed top margin to be closer to tags */
 }
@@ -294,17 +300,28 @@ p {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
 }
 
+.score-item.inverted {
+  background-color: var(--jrf-purple);
+  color: white;
+  border-radius: 4px;
+}
+
+.score-item.inverted .score-label,
+.score-item.inverted .score-value {
+  color: white;
+}
+
 .score-label {
   font-family: 'Lexend', sans-serif;
   font-weight: 400;
   color: var(--jrf-dark-gray);
-  font-size: 12px; /* Slightly smaller for compact look */
+  font-size: 12px;
 }
 
 .score-value {
   font-family: 'DM Serif Text', serif;
   font-weight: 400;
-  font-size: 16px; /* Slightly smaller */
+  font-size: 16px;
   color: var(--jrf-purple);
   margin-left: 4px;
 }
@@ -331,29 +348,11 @@ p {
 .section-intro {
   font-family: 'Lexend', sans-serif;
   font-weight: 300;
+  font-size: 16px;
   max-width: 800px;
   margin-bottom: 30px;
-  color: var(--jrf-dark-gray);
+  color: var(--jrf-text);
 }
-
-/* Add style for metaphor box */
-.metaphor-box {
-  background-color: rgba(160, 215, 228, 0.1);
-  border-left: 4px solid var(--jrf-purple-light);
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 6px;
-}
-
-.metaphor-title {
-  font-family: 'DM Serif Text', serif;
-  font-weight: 400;
-  font-size: 16px;
-  color: var(--jrf-purple);
-  margin-bottom: 10px;
-}
-
-/* Add these styles for the solution sections */
 
 .solution-content {
   margin-top: 20px;
@@ -380,7 +379,7 @@ p {
   font-family: 'Lexend', sans-serif;
   font-weight: 300;
   line-height: 1.7;
-  font-size: 15px;
+  font-size: 16px;
   overflow-wrap: break-word;
   word-wrap: break-word;
   hyphens: auto;
@@ -763,4 +762,16 @@ footer {
 .level-option:has(input[type='radio']:checked) {
   background-color: rgba(255, 255, 255, 0.2);
   border-color: white;
+}
+
+.overall-score {
+  margin-top: 15px;
+  text-align: right;
+  font-weight: bold;
+  color: var(--jrf-purple);
+}
+
+.section-content strong {
+  color: var(--jrf-purple);
+  font-weight: bold;
 }

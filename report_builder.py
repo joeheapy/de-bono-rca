@@ -8,7 +8,7 @@ from config import PROBLEM_STATEMENT
 def tree_to_html(tree, level=0):
     """Helper method to convert a cause tree to HTML"""
     html_content = f'<div style="margin-left: {level*20}px">\n'
-    html_content += f'<p><strong>{html.escape(tree["cause"])}</strong></p>\n'
+    html_content += f'<p>{html.escape(tree["cause"])}</p>\n'
     
     if tree['children']:
         html_content += '<div class="cause-node">\n'
@@ -75,21 +75,21 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                                 <input type="radio" name="analysis_level" value="fastest" checked>
                                 <div class="option-content">
                                     <span class="option-name">Fastest</span>
-                                    <span class="option-desc">Quick analysis with fewer ideas (1-2 min)</span>
+                                    <span class="option-desc">Quick analysis generates four ideas in about 30 seconds)</span>
                                 </div>
                             </label>
                             <label class="level-option">
                                 <input type="radio" name="analysis_level" value="balanced">
                                 <div class="option-content">
                                     <span class="option-name">Balanced</span>
-                                    <span class="option-desc">Standard depth and variety (2-5 min)</span>
+                                    <span class="option-desc">Standard depth analysis generates 27 ideas in 3-4 minutes</span>
                                 </div>
                             </label>
                             <label class="level-option">
                                 <input type="radio" name="analysis_level" value="deepest">
                                 <div class="option-content">
                                     <span class="option-name">Deepest</span>
-                                    <span class="option-desc">Thorough analysis with more ideas (15+ min)</span>
+                                    <span class="option-desc">Thorough analysis generates 64 ideas in around 8 minutes)</span>
                                 </div>
                             </label>
                         </div>
@@ -129,7 +129,13 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
         # Add root cause trees
         for i, tree in enumerate(results['cause_trees'], 1):
             html_content += f'<div class="cause-tree">\n<h3>Root Cause {i}: {html.escape(tree["cause"])}</h3>\n'
-            html_content += tree_to_html(tree)
+            
+            # Create a container for the children only
+            html_content += '<div class="cause-node">\n'
+            for child in tree['children']:
+                html_content += tree_to_html(child)
+            html_content += '</div>\n'
+            
             html_content += '</div>\n'
         
         html_content += """
@@ -186,13 +192,20 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
             # Parse solution content into sections
             sections = parse_solution_content(solution['content'])
             
-            # Get the title or use a default
-            solution_title = sections.get('title', '').strip()
-            display_title = f" - {solution_title}" if solution_title else ""
+            # Extract the title from the solution title field (not from sections)
+            solution_title = ""
+            content_lines = solution["content"].strip().split('\n')
+            for line in content_lines:
+                if line.startswith("SOLUTION TITLE:"):
+                    solution_title = line.replace("SOLUTION TITLE:", "").strip()
+                    break
+            
+            display_title = solution_title if solution_title else f"Solution {i}"
             
             html_content += f'''
                 <div class="solution-card">
-                    <h3>Solution {i}{display_title} (Score: {overall_score:.1f}/10)</h3>
+                    <h3>{display_title}</h3>
+                    
                     <div class="tags-container">
                         <div class="solution-type">Based on: {html.escape(solution['root_cause'][:40])}{"..." if len(solution['root_cause']) > 40 else ""}</div>
             '''
@@ -220,25 +233,55 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                             <div class="score-label">Relevance:</div>
                             <div class="score-value">{solution['scores'].get('relevance', 'N/A')}</div>
                         </div>
+                        <div class="score-item inverted">
+                            <div class="score-label">Overall:</div>
+                            <div class="score-value">{overall_score:.1f}/10</div>
+                        </div>
                     </div>
-                        
+                    
                     <div class="solution-content">
-                        <div class="solution-section">
-                            <div class="section-title">Domain Insight</div>
-                            <div class="section-content">{html.escape(sections['insight'])}</div>
+            '''
+            
+            # Process KEY IDEA APPLICATION section
+            key_idea = ""
+            content_lines = solution["content"].strip().split('\n')
+            for i, line in enumerate(content_lines):
+                if line.startswith("KEY IDEA APPLICATION:"):
+                    key_idea = line[len("KEY IDEA APPLICATION:"):].strip()
+                    # Look for multi-line content
+                    next_idx = i + 1
+                    while next_idx < len(content_lines) and not content_lines[next_idx].startswith("IMPLEMENTATION:"):
+                        key_idea += " " + content_lines[next_idx].strip()
+                        next_idx += 1
+                    break
+            
+            if key_idea:
+                html_content += f'''
+                        <div class="section-content">
+                            <strong>KEY IDEA APPLICATION:</strong> {html.escape(key_idea)}
                         </div>
-                        
-                        <div class="solution-section">
-                            <div class="section-title">Creative Step</div>
-                            <div class="section-content">{html.escape(sections['solution'])}</div>
+                '''
+            
+            # Process IMPLEMENTATION section
+            implementation = ""
+            for i, line in enumerate(content_lines):
+                if line.startswith("IMPLEMENTATION:"):
+                    implementation = line[len("IMPLEMENTATION:"):].strip()
+                    # Look for multi-line content
+                    next_idx = i + 1
+                    while next_idx < len(content_lines) and not content_lines[next_idx].startswith("SOLUTION TITLE:") and not content_lines[next_idx].startswith("KEY IDEA APPLICATION:"):
+                        implementation += " " + content_lines[next_idx].strip()
+                        next_idx += 1
+                    break
+            
+            if implementation:
+                html_content += f'''
+                        <div class="section-content">
+                            <strong>IMPLEMENTATION:</strong> {html.escape(implementation)}
                         </div>
-                        
-                        <div class="solution-section">
-                            <div class="section-title">Investment Opportunity</div>
-                            <div class="section-content">{html.escape(sections['implementation'])}</div>
-                        </div>
-                        
-                        {f'<div class="solution-section"><div class="section-content">{html.escape(sections["other"])}</div></div>' if sections["other"] else ''}
+                '''
+            
+            html_content += f'''
                     </div>
                 </div>
             '''
@@ -335,10 +378,9 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                 // Add processing steps
                 const stepsList = [
                     'Generating knowledge domains for lateral thinking',
-                    'Identifying initial root causes',
-                    'Building root cause trees',
-                    'Having ideas',
-                    'Writing and ranking ideas (this will take some time)'
+                    'Identifying root causes',
+                    'Planting root cause trees',
+                    'Generating and evaluating ideas',
                 ];
                 
                 stepsList.forEach((step, index) => {
@@ -362,7 +404,7 @@ def generate_html_report(results: Dict[str, Any], show_loading=False) -> str:
                 
                 // Use variable timing for each step to better match the actual process
                 let currentStep = 0;
-                const stepTimes = [3000, 7000, 10000, 15000, 15000]; 
+                const stepTimes = [3000, 7000, 10000, 15000]; 
                 
                 function advanceStep() {
                     if (currentStep < stepsList.length - 1) {
